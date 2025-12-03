@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cifrado Hill - Luis Gerardo Sánchez Mendoza</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <div class="bg-layer"></div>
+
+    <div class="shell">
+        <header class="app-header">
+            <div class="app-title">
+                <span class="dot"></span>
+                <h1>Hill Cipher 2×2</h1>
+            </div>
+            <div class="app-meta">
+                <span>Luis Gerardo Sánchez Mendoza</span>
+                <span>Grupo: (B)</span>
+                <span>Materia: Fundamentos de Álgebra</span>
+            </div>
+        </header>
+
+        <main class="grid">
+            <!-- Mensaje -->
+            <section class="card card-main">
+                <div class="card-header">
+                    <h2>Mensaje</h2>
+                    <span id="char-count" class="char-count">0/200</span>
+                </div>
+                <textarea
+                    id="mensaje"
+                    maxlength="200"
+                    placeholder="Escribe aquí el texto a encriptar o desencriptar..."
+                ></textarea>
+                <p class="hint">
+                    Solo se usan letras A–Z. Se ignoran acentos, números y símbolos.
+                </p>
+            </section>
+
+            <!-- Matriz + acciones -->
+            <section class="card card-side">
+                <div class="block">
+                    <h2>Matriz clave 2×2</h2>
+                    <div class="matrix">
+                        <input type="number" id="k11" value="3" />
+                        <input type="number" id="k12" value="3" />
+                        <input type="number" id="k21" value="2" />
+                        <input type="number" id="k22" value="5" />
+                    </div>
+                    <p class="mini">
+                        Usa una clave invertible mod 26. Ejemplo: [[3,3],[2,5]]
+                    </p>
+                </div>
+
+                <div class="block">
+                    <h2>Acciones</h2>
+                    <div class="buttons">
+                        <button id="btn-encriptar">Encriptar</button>
+                        <button id="btn-desencriptar" class="secondary">
+                            Desencriptar
+                        </button>
+                        <button id="btn-limpiar" class="ghost">Limpiar</button>
+                    </div>
+                    <p class="mini">
+                        Para desencriptar, el texto debe tener longitud par.
+                    </p>
+                </div>
+            </section>
+
+            <!-- Resultado -->
+            <section class="card card-full">
+                <h2>Resultado</h2>
+                <div id="resultado" class="resultado">
+                    Aquí aparecerá el resultado…
+                </div>
+
+                <div class="debug-wrap">
+                    <div class="debug-header">
+                        <span>Detalle numérico</span>
+                        <span class="pill">A=0 ··· Z=25</span>
+                    </div>
+                    <pre id="debug" class="debug"></pre>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <span>Cifrado Hill · HTML · CSS · JavaScript</span>
+            <span>Repositorio + GitHub Pages</span>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
