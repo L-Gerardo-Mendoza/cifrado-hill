@@ -221,6 +221,12 @@ btnDesencriptar.addEventListener("click", () => {
     }
 });
 
+const original = texto;
+texto = limpiarTexto(texto);
+if (texto !== original) {
+    alert("Se eliminaron espacios, acentos o caracteres no válidos. Se usará: " + texto);
+}
+
 btnLimpiar.addEventListener("click", () => {
     mensajeInput.value = "";
     charCount.textContent = "0/200";
