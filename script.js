@@ -16,7 +16,7 @@ function espaciarTexto(texto) {
     return texto.split("").join(" ");
 }
 
-// Actualizar contador de caracteres del textarea
+// Actualizar contador del textarea
 mensajeInput.addEventListener("input", () => {
     const len = mensajeInput.value.length;
     charCount.textContent = `${len}/200`;
@@ -24,46 +24,42 @@ mensajeInput.addEventListener("input", () => {
 
 // Funciones de utilería
 function limpiarTexto(texto) {
-    // Quitar espacios, acentos, números, símbolos. Solo A-Z.
     return texto
         .toUpperCase()
         .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "") // quita acentos
-        .replace(/[^A-Z]/g, ""); // solo letras A-Z
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^A-Z]/g, "");
 }
 
 function letraANumero(letra) {
-    return letra.charCodeAt(0) - 65; // A=0
+    return letra.charCodeAt(0) - 65;
 }
 
 function numeroALetra(num) {
     return String.fromCharCode((num % 26) + 65);
 }
 
-// Obtener matriz clave
 function obtenerMatrizClave() {
     const a = parseInt(k11.value, 10);
     const b = parseInt(k12.value, 10);
     const c = parseInt(k21.value, 10);
     const d = parseInt(k22.value, 10);
 
-    if ([a, b, c, d].some((v) => Number.isNaN(v))) {
+    if ([a, b, c, d].some(v => Number.isNaN(v))) {
         throw new Error("Todos los elementos de la matriz clave deben ser números.");
     }
 
     return { a, b, c, d };
 }
 
-// Funciones matemáticas
+// Matemáticas
 function mod(n, m) {
     return ((n % m) + m) % m;
 }
 
 function mcd(a, b) {
     while (b !== 0) {
-        const t = b;
-        b = a % b;
-        a = t;
+        [a, b] = [b, a % b];
     }
     return a;
 }
@@ -76,36 +72,22 @@ function inversoModular(a, m) {
     return null;
 }
 
-// Inversa de matriz 2x2 mod 26
 function inversaMatriz2x2Mod26({ a, b, c, d }) {
     const det = mod(a * d - b * c, 26);
-    if (mcd(det, 26) !== 1) {
-        throw new Error(`La matriz clave no es invertible módulo 26 (det=${det}).`);
-    }
+    if (mcd(det, 26) !== 1) throw new Error("La matriz clave no es invertible.");
 
     const detInv = inversoModular(det, 26);
-    if (detInv === null) {
-        throw new Error("No existe inverso modular del determinante módulo 26.");
-    }
+    if (detInv === null) throw new Error("No existe inverso modular del determinante.");
 
-    const A = mod(detInv * d, 26);
-    const B = mod(-detInv * b, 26);
-    const C = mod(-detInv * c, 26);
-    const D = mod(detInv * a, 26);
-
-    return { a: A, b: B, c: C, d: D };
+    return {
+        a: mod(detInv * d, 26),
+        b: mod(-detInv * b, 26),
+        c: mod(-detInv * c, 26),
+        d: mod(detInv * a, 26)
+    };
 }
 
-// Mostrar mensajes
-function mostrarResultado(texto) {
-    resultadoDiv.textContent = texto;
-}
-
-function mostrarDebug(info) {
-    debugPre.textContent = info;
-}
-
-// Cifrado Hill (2x2) SIN rellenar con X
+// ⭐⭐ CIFRAR HILL – ACEPTA LONGITUD IMPAR ⭐⭐
 function cifrarHill(texto, matriz) {
     let limpio = limpiarTexto(texto);
 
@@ -113,17 +95,11 @@ function cifrarHill(texto, matriz) {
         throw new Error("El mensaje está vacío o no contiene letras válidas.");
     }
 
-    // ✅ Ya no rellenamos con X, solo aceptamos longitud PAR
-    if (limpio.length % 2 !== 0) {
-        throw new Error(
-            "El mensaje debe tener número PAR de letras (sin rellenar con X)."
-        );
-    }
-
     let resultado = "";
     let debugInfo = "";
 
-    for (let i = 0; i < limpio.length; i += 2) {
+    // Cifrar solo pares
+    for (let i = 0; i < limpio.length - 1; i += 2) {
         const l1 = limpio[i];
         const l2 = limpio[i + 1];
 
@@ -141,28 +117,32 @@ function cifrarHill(texto, matriz) {
         debugInfo += `${l1}${l2} -> [${x1}, ${x2}] -> [${y1}, ${y2}] -> ${c1}${c2}\n`;
     }
 
+    // ⭐ Si sobra una letra impar → NO se cifra ⭐
+    if (limpio.length % 2 !== 0) {
+        const sobrante = limpio[limpio.length - 1];
+        resultado += sobrante;
+        debugInfo += `Letra sobrante sin cifrar: ${sobrante}`;
+    }
+
     mostrarDebug(debugInfo.trim());
     return resultado;
 }
 
-// Descifrado Hill (2x2)
-function descifrarHill(textoCifrado, matriz) {
-    let limpio = limpiarTexto(textoCifrado);
+// ⭐⭐ DESCIFRAR HILL – acepta letra sobrante ⭐⭐
+function descifrarHill(texto, matriz) {
+    let limpio = limpiarTexto(texto);
 
     if (limpio.length === 0) {
-        throw new Error("El mensaje cifrado está vacío o no contiene letras válidas.");
-    }
-
-    if (limpio.length % 2 !== 0) {
-        throw new Error("El mensaje cifrado debe tener longitud PAR.");
+        throw new Error("El mensaje cifrado está vacío.");
     }
 
     const matrizInv = inversaMatriz2x2Mod26(matriz);
 
     let resultado = "";
-    let debugInfo = `Matriz inversa mod 26: [[${matrizInv.a}, ${matrizInv.b}], [${matrizInv.c}, ${matrizInv.d}]]\n\n`;
+    let debugInfo = "";
 
-    for (let i = 0; i < limpio.length; i += 2) {
+    // Procesar solo pares
+    for (let i = 0; i < limpio.length - 1; i += 2) {
         const l1 = limpio[i];
         const l2 = limpio[i + 1];
 
@@ -172,34 +152,32 @@ function descifrarHill(textoCifrado, matriz) {
         const x1 = mod(matrizInv.a * y1 + matrizInv.b * y2, 26);
         const x2 = mod(matrizInv.c * y1 + matrizInv.d * y2, 26);
 
-        const p1 = numeroALetra(x1);
-        const p2 = numeroALetra(x2);
+        resultado += numeroALetra(x1) + numeroALetra(x2);
 
-        resultado += p1 + p2;
+        debugInfo += `${l1}${l2} -> ${numeroALetra(x1)}${numeroALetra(x2)}\n`;
+    }
 
-        debugInfo += `${l1}${l2} -> [${y1}, ${y2}] -> [${x1}, ${x2}] -> ${p1}${p2}\n`;
+    // Agregar letra sobrante sin descifrar
+    if (limpio.length % 2 !== 0) {
+        const sobrante = limpio[limpio.length - 1];
+        resultado += sobrante;
+        debugInfo += `Letra sobrante sin descifrar: ${sobrante}`;
     }
 
     mostrarDebug(debugInfo.trim());
     return resultado;
 }
 
-// EVENTOS DE BOTONES
+// BOTONES
 btnEncriptar.addEventListener("click", () => {
     try {
         const matriz = obtenerMatrizClave();
-        const texto = mensajeInput.value;
+        const cifrado = cifrarHill(mensajeInput.value, matriz);
 
-        // Ciframos (la función ya limpia el texto)
-        const cifrado = cifrarHill(texto, matriz);
-
-        // Guardamos el cifrado sin espacios en el textarea
         mensajeInput.value = cifrado;
         charCount.textContent = `${cifrado.length}/200`;
 
-        // ✅ Mostramos el resultado espaciado: "ABCD" -> "A B C D"
         mostrarResultado(espaciarTexto(cifrado));
-
     } catch (err) {
         mostrarResultado(`Error: ${err.message}`);
         mostrarDebug("");
@@ -209,17 +187,12 @@ btnEncriptar.addEventListener("click", () => {
 btnDesencriptar.addEventListener("click", () => {
     try {
         const matriz = obtenerMatrizClave();
-        const texto = mensajeInput.value;
+        const descifrado = descifrarHill(mensajeInput.value, matriz);
 
-        const descifrado = descifrarHill(texto, matriz);
-
-        // Texto plano sin espacios en el textarea
         mensajeInput.value = descifrado;
         charCount.textContent = `${descifrado.length}/200`;
 
-        // ✅ Mostramos el texto descifrado espaciado
         mostrarResultado(espaciarTexto(descifrado));
-
     } catch (err) {
         mostrarResultado(`Error: ${err.message}`);
         mostrarDebug("");
