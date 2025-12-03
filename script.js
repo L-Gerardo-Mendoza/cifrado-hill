@@ -11,12 +11,12 @@ const btnLimpiar = document.getElementById("btn-limpiar");
 const resultadoDiv = document.getElementById("resultado");
 const debugPre = document.getElementById("debug");
 
-// FUNCIONES NUEVAS
+// Función para espaciar el texto: "HOLA" -> "H O L A"
 function espaciarTexto(texto) {
     return texto.split("").join(" ");
 }
 
-// Actualizar contador de caracteres
+// Actualizar contador de caracteres del textarea
 mensajeInput.addEventListener("input", () => {
     const len = mensajeInput.value.length;
     charCount.textContent = `${len}/200`;
@@ -24,11 +24,12 @@ mensajeInput.addEventListener("input", () => {
 
 // Funciones de utilería
 function limpiarTexto(texto) {
+    // Quitar espacios, acentos, números, símbolos. Solo A-Z.
     return texto
         .toUpperCase()
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "") // quita acentos
-        .replace(/[^A-Z]/g, ""); // solo A-Z, sin espacios
+        .replace(/[^A-Z]/g, ""); // solo letras A-Z
 }
 
 function letraANumero(letra) {
@@ -79,12 +80,12 @@ function inversoModular(a, m) {
 function inversaMatriz2x2Mod26({ a, b, c, d }) {
     const det = mod(a * d - b * c, 26);
     if (mcd(det, 26) !== 1) {
-        throw new Error(`La matriz clave no es invertible (det=${det}).`);
+        throw new Error(`La matriz clave no es invertible módulo 26 (det=${det}).`);
     }
 
     const detInv = inversoModular(det, 26);
     if (detInv === null) {
-        throw new Error("No existe inverso modular del determinante.");
+        throw new Error("No existe inverso modular del determinante módulo 26.");
     }
 
     const A = mod(detInv * d, 26);
@@ -104,7 +105,7 @@ function mostrarDebug(info) {
     debugPre.textContent = info;
 }
 
-// Cifrado Hill (2x2)
+// Cifrado Hill (2x2) SIN rellenar con X
 function cifrarHill(texto, matriz) {
     let limpio = limpiarTexto(texto);
 
@@ -112,8 +113,11 @@ function cifrarHill(texto, matriz) {
         throw new Error("El mensaje está vacío o no contiene letras válidas.");
     }
 
+    // ✅ Ya no rellenamos con X, solo aceptamos longitud PAR
     if (limpio.length % 2 !== 0) {
-        limpio += "X";
+        throw new Error(
+            "El mensaje debe tener número PAR de letras (sin rellenar con X)."
+        );
     }
 
     let resultado = "";
@@ -141,7 +145,7 @@ function cifrarHill(texto, matriz) {
     return resultado;
 }
 
-// Descifrado Hill
+// Descifrado Hill (2x2)
 function descifrarHill(textoCifrado, matriz) {
     let limpio = limpiarTexto(textoCifrado);
 
@@ -150,7 +154,7 @@ function descifrarHill(textoCifrado, matriz) {
     }
 
     if (limpio.length % 2 !== 0) {
-        throw new Error("El mensaje cifrado debe tener longitud par.");
+        throw new Error("El mensaje cifrado debe tener longitud PAR.");
     }
 
     const matrizInv = inversaMatriz2x2Mod26(matriz);
@@ -185,12 +189,15 @@ btnEncriptar.addEventListener("click", () => {
     try {
         const matriz = obtenerMatrizClave();
         const texto = mensajeInput.value;
+
+        // Ciframos (la función ya limpia el texto)
         const cifrado = cifrarHill(texto, matriz);
 
+        // Guardamos el cifrado sin espacios en el textarea
         mensajeInput.value = cifrado;
         charCount.textContent = `${cifrado.length}/200`;
 
-        // Resultado ESPACIADO
+        // ✅ Mostramos el resultado espaciado: "ABCD" -> "A B C D"
         mostrarResultado(espaciarTexto(cifrado));
 
     } catch (err) {
@@ -203,12 +210,14 @@ btnDesencriptar.addEventListener("click", () => {
     try {
         const matriz = obtenerMatrizClave();
         const texto = mensajeInput.value;
+
         const descifrado = descifrarHill(texto, matriz);
 
+        // Texto plano sin espacios en el textarea
         mensajeInput.value = descifrado;
         charCount.textContent = `${descifrado.length}/200`;
 
-        // Resultado ESPACIADO
+        // ✅ Mostramos el texto descifrado espaciado
         mostrarResultado(espaciarTexto(descifrado));
 
     } catch (err) {
